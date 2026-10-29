@@ -1,0 +1,70 @@
+# Producción en la nube (VPS): PostgreSQL + backend (Baileys) + Caddy (HTTPS automático).
+# Ejecutar desde infrastructure/docker/ ver las instrucciones en docs/despliegue-nube.md:
+#   docker compose --env-file .env -f docker-compose.prod.yml up -d
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-crm}
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm -d $${POSTGRES_DB:-crm}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/backend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://crm:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crm}
+      APP_BASE_URL: ${APP_BASE_URL:?Defina APP_BASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL:?Defina FRONTEND_URL (la URL de la app en Vercel)}
+      APP_TIMEZONE: America/Lima
+      LOG_LEVEL: info
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Defina JWT_ACCESS_SECRET (32+ caracteres)}
+      ACCESS_TOKEN_TTL_MIN: 15
+      REFRESH_TOKEN_TTL_DAYS: 7
+      COOKIE_SECURE: "true"
+      TRUST_PROXY: 1
+      WHATSAPP_SESSION_PATH: /app/data/whatsapp-session
+      WHATSAPP_SEND_MODE: ${WHATSAPP_SEND_MODE:-off}
+      WHATSAPP_ALLOWED_NUMBERS: ${WHATSAPP_ALLOWED_NUMBERS:-}
+      WHATSAPP_AUTOCONNECT: ${WHATSAPP_AUTOCONNECT:-}
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      AI_API_KEY: ${AI_API_KEY:-}
+    volumes:
+      - wasession:/app/data/whatsapp-session
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Defina API_DOMAIN (p. ej. api.tudominio.com)}
+      BACKEND_PORT: 3000
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  wasession:
+  caddy_data:
+  caddy_config:

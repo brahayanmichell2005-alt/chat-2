@@ -1,0 +1,16 @@
+# Contexto de build: solo lo que necesita el backend
+**/node_modules/
+.git/
+.env
+.env.*
+!.env.example
+docs/
+frontend/
+*.zip
+*.docx
+whatsapp-session/
+whatsapp-tech-crm/
+backups/
+*.log
+coverage/
+.pgdata

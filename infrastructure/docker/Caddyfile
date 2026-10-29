@@ -1,0 +1,5 @@
+# HTTPS automático (Let's Encrypt) para el backend en la VPS.
+# API_DOMAIN y BACKEND_PORT llegan desde el entorno de docker compose.
+{$API_DOMAIN} {
+    reverse_proxy backend:{$BACKEND_PORT}
+}

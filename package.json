@@ -1,0 +1,18 @@
+{
+  "name": "whatsapp-tech-crm",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "backend", "frontend"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "db:up": "docker compose -f infrastructure/docker/docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f infrastructure/docker/docker-compose.dev.yml down",
+    "migrate": "npm run migrate -w backend",
+    "seed:admin": "npm run seed:admin -w backend",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w backend && npm run typecheck -w frontend",
+    "test": "npm run test -w backend",
+    "test:integration": "npm run test:integration -w backend"
+  }
+}
