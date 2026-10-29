@@ -3,7 +3,11 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://api.tudominio.com/api/v1/:path*"
+      "destination": "https://PON-AQUI-EL-DOMINIO/api/v1/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
